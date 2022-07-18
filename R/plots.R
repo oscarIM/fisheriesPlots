@@ -33,19 +33,6 @@
 #' code here
 #' }
 ###especificar las columnas de los meses
-###
-require(dplyr)
-require(ggplot2)
-require(tidyverse)
-require(ggpubr)
-require(gridExtra)
-require(grid)
-require(randomcoloR)
-require(stringr)
-require(RColorBrewer)
-require(scales)
-require(janitor)
-#cols <- ene:dic, recurso
 plot_multipanel <- function(data, dicc, caletas = NULL, sp_remove = NULL, ylab_text_a, xlab_text_a, ylab_text_c, xlab_text_c, n_break_ylab, width, height, output_name, n_pie, round) {
   options(scipen = 999)
   # read data and dicc
