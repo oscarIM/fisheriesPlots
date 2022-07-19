@@ -1,88 +1,96 @@
 #' @title plot_multipanel
 #' @description Función para realizar gráfico multipanel
-#' @param data dataframe de entrada
-#' @param dir_input directory en donde se almacenan las imágenes L2
-#' @param dir_output directory en donde se almacenaran las imágenes L3 resultantes
-#' @param var_name nombre de la variable a analizar ("chlor_a", "sst", "Rrs_645", "pic", "poc", "nflh", etc)
-#' @param n_cores número de núcleos a usar. Por defecto, n_cores = 1 (corrida secuencial). La parelelización es respecto de la cantidad de sub_folder procesados simultaneamente
-#' @param res_l2 resolución para l2bin. Por defecto, res = "1" (H: 0.5km, Q: 250m, HQ: 100m, HH: 50m, 1: 1.1km, 2: 2.3km, 4: 4.6km, 9: 9.2km, 18: 18.5km, 36: 36km, 1D: 1 degree, HD: 0.5 degree, QD: 0.25 degree)
-#' @param res_l3 resolución para l3mapgen. Por defecto, res = "1km" (36km: 1080 x 540, 18km: 2160 x 1080, 9km: 4320 x 2160, 4km: 8640 x 4320, 2km: 17280 x 8640, 1km: 34560 x 17280, hkm: 69120 x 34560, qkm: 138240 x 69120, smi: 4096 x 2048, smi4: 8192 x 4096, land: 8640 x 4320)
-#' @param north latitud norte para la generación de las imágenes L3
-#' @param south latitud sur para la generación de las imágenes L3
-#' @param west latitud oeste para la generación de las imágenes L3
-#' @param east latitud este para la generación de las imágenes L3
-#' @param need_extract mantener sistema de archivos año/mes? (TRUE/FALSE).Por defecto, FALSE
-#' @param sort_files crearr sistema de archivos año/mes? (TRUE/FALSE).Por defecto, FALSE
-#' @return imágenes L3
-#' @importFrom fs dir_ls dir_create file_move dir_delete file_delete path_file
-#' @importFrom readr read_delim
-#' @importFrom dplyr filter mutate
-#' @importFrom lubridate as_date year month
-#' @importFrom purrr walk walk2 possibly
-#' @importFrom stringr str_remove str_detect str_replace
-#' @importFrom tibble tibble
-#' @importFrom furrr future_walk future_walk2
-#' @importFrom future plan cluster
-#' @importFrom parallel stopCluster makeForkCluster
-#' @importFrom utils untar
-#' @importFrom tictoc tic toc
-#' @importFrom progressr with_progress progressor
+#' @param datos dataframe de entrada
+#' @param dicc archivo diccionario de recursos, separado por "," XXX
+#' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran
+#' @param col_especies columna que tiene que el nombre de las especies/recursos
+#' @param especies_rm Vector con el nombre de las especies que se quieran eliminar del gráfico en el gráfico. Si NULL, se usaran todas las especies
+#' @param ylab_text_sup Cadena de texto para el eje y del panel superior. Si NULL == "Desembarque total (Ton)"
+#' @param xlab_text_sup  Cadena de texto para el eje x del panel superior. Si NULL == "Años"
+#' @param ylab_text_inf Cadena de texto para el eje y del panel inferior. Si NULL == "Desembarque promedio (Ton)"
+#' @param xlab_text_inf Cadena de texto para el eje x del panel inferior. Si NULL == "Meses"
+#' @param n_pie Número de divisiones de la torta
+#' @param n_ticks Número de divisiones ejes y
+#' @param nombre_salida Nombre figura incluyendo la extensión ("XXXX.png")
+#' @param dec_red Número de decimales para los gráficos de torta
+#' @return imágenes png
+#' @import ggplot2
+#' @import dplyr
+#' @import stringr
+#' @importFrom janitor clean_names
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom gridExtra grid.arrange
+#' @importFrom purrr map
+#' @importFrom tidyr pivot_longer
 #' @export plot_multipanel
 #' @examples
 #' \dontrun{
-#' code here
+#' datos <- read_tsv("data.txt", show_col_types = FALSE)
+#' dicc <- read_delim("diccionario_recursos.txt", delim = ";", show_col_types = FALSE)
+#' caletas <- "SAN VICENTE"
+#' col_especie <- "ESPECIE"
+#' especies_rm <- "SARDINA COMUN"
+#' ylab_text_sup <- "eje y"
+#' xlab_text_sup <- "eje x"
+#' ylab_text_inf <- "eje y"
+#' xlab_text_inf <- "eje x"
+#' ancho <- 12
+#' alto <- 8
+#' n_ticks <- 6
+#' nombre_salida <- "plot.png"
+#' n_pie <- 5
+#' dec_red <- 2
+#' plot_multipanel(datos = datos, dicc = dicc, caletas = caletas, especies_rm = especies_rm, col_especie = col_especie, ylab_text_sup = ylab_text_sup, xlab_text_sup = xlab_text_sup, ylab_text_inf = ylab_text_inf, xlab_text_inf = xlab_text_inf, ancho = ancho, alto = alto, nombre_salida = nombre_salida, n_pie = n_pie, dec_red = dec_red)
 #' }
-###especificar las columnas de los meses
-plot_multipanel <- function(data, dicc, caletas = NULL, sp_remove = NULL, ylab_text_a, xlab_text_a, ylab_text_c, xlab_text_c, n_break_ylab, width, height, output_name, n_pie, round) {
+plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col_especie, ylab_text_sup, xlab_text_sup, ylab_text_inf, xlab_text_inf, ancho, alto, nombre_salida = "plot.png", n_ticks  = 6, n_pie = 5, dec_red = 2) {
   options(scipen = 999)
   # read data and dicc
-  dicc <- readr::read_delim(dicc, delim = ";")
-  data <- janitor::clean_names(data_desembarque) %>%
-    pivot_longer(data = data, cols = ene:dic, names_to = "Meses", values_to = "desembarque", values_drop_na = TRUE)
-  data <- data %>% dplyr::mutate(recurso = stringr::str_to_upper(recurso),
-                          Meses = stringr::str_to_upper(Meses))
+  col_especie <- str_to_lower(col_especie)
+  data <- clean_names(datos) %>%
+    pivot_longer(cols = ene:dic, names_to = "Meses", values_to = "desembarque", values_drop_na = TRUE) %>%
+    mutate(
+      especie = str_to_upper(.[[col_especie]]),
+      Meses = str_to_upper(Meses)
+    )
   if (!missing(caletas)) {
-    data <- data %>% dplyr::filter(caleta %in% caletas)
-    names <- data$recurso
+    data <- data %>% filter(caleta %in% caletas)
+    names <- data[[col_especie]]
   } else {
-    data <- data
-    names <- data$recurso
+    names <- data[[col_especie]]
   }
-  #cambiar a map cuando se pueda
+  # cambiar a map cuando se pueda
   for (i in 1:nrow(dicc)) {
-    names <- stringr::str_replace(names, dicc$original_names[i], dicc$fixed_names[i])
+    names <- str_replace(string = names, pattern = dicc$original_names[i], replacement = dicc$fixed_names[i])
   }
-  data$recurso <- names
-  if (missing(sp_remove)) {
+  data[[col_especie]] <- names
+  if (missing(especies_rm)) {
     data <- data
   } else {
-    data <- data %>% dplyr::filter(!recurso %in% sp_remove)
+    data <- data %>% filter(!.[[col_especie]] %in% especies_rm)
   }
   #### empezar los plots####
   #### plot A: total anual, apilado por tipo de recurso con todas las especies####
   col_tipo <- c("#33a02c", "#fdbf6f", "#1f78b4")
   names(col_tipo) <- c("Algas", "Invertebrados", "Peces")
   summ <- data %>%
-    dplyr::group_by(tipo, ano) %>%
-    dplyr::summarise(total_desembarque = sum(desembarque, na.rm = T))
+    group_by(tipo, ano) %>%
+    summarise(total_desembarque = sum(desembarque, na.rm = T))
   plot_a <- ggplot(summ, aes(fill = tipo, y = total_desembarque, x = as.factor(ano)), na.rm = T) +
     geom_bar(position = "stack", stat = "identity") +
-    ylab(ylab_text_a) +
-    xlab(xlab_text_a) +
-    scale_y_continuous(n.breaks = n_break_ylab) +
+    ylab(ylab_text_sup) +
+    xlab(xlab_text_sup) +
+    scale_y_continuous(n.breaks = n_ticks) +
     ggtitle(label = "Tipo Especies") +
     theme_light() +
     theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
-    scale_fill_manual(breaks = c("Peces", "Algas", "Invertebrados"), values = alpha(col_tipo, 0.7)) +
+    scale_fill_manual(breaks = c( "Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
   #### plot B: pie plot for n resources to display: total. Como esta escrito actualmente, solo funciona para 8 recursos
-  data_desembarque_list <- data %>%
-    group_by(tipo) %>%
-    group_split()
+  # fn para usar sobre cada tipo de recurso (data_pb#)
   plot_torta <- function(data) {
     summ <- data %>%
-      group_by(recurso) %>%
+      group_by(across(all_of(col_especie))) %>%
       summarise(total_desembarque = sum(desembarque, na.rm = T)) %>%
       ungroup()
     summ_perct <- summ %>%
@@ -90,14 +98,14 @@ plot_multipanel <- function(data, dicc, caletas = NULL, sp_remove = NULL, ylab_t
       arrange(desc(perct)) %>%
       mutate(sum_cum = cumsum(perct))
     if (nrow(summ_perct) <= n_pie) {
-      selected_sp <- summ_perct %>% pull(recurso)
+      selected_sp <- summ_perct %>% pull(., all_of(col_especie))
     } else {
       selected_sp <- summ_perct %>%
         slice_head(n = n_pie) %>%
-        pull(recurso)
+        pull(., all_of(col_especie))
     }
     summ <- summ %>%
-      mutate(recurso = if_else(recurso %in% selected_sp, recurso, "OTROS")) %>%
+      mutate(recurso = if_else(all_of(.[[col_especie]]) %in% selected_sp, .[[col_especie]], "OTROS")) %>%
       group_by(recurso) %>%
       summarise(total_desembarque = sum(total_desembarque, na.rm = T)) %>%
       arrange(desc(total_desembarque)) %>%
@@ -108,7 +116,7 @@ plot_multipanel <- function(data, dicc, caletas = NULL, sp_remove = NULL, ylab_t
       cumulative = rev(cumsum(rev(total_desembarque))),
       pos = total_desembarque / 2 + lead(cumulative, 1),
       pos = if_else(is.na(pos), total_desembarque / 2, pos),
-      labels = paste0(round((total_desembarque / sum(total_desembarque)) * 100, round), "%")
+      labels = paste0(round((total_desembarque / sum(total_desembarque)) * 100, dec_red), "%")
     )
     summ <- summ %>% mutate(recurso = paste0(recurso, " ", "(", labels, ")"))
     ot <- summ %>% filter(str_detect(recurso, "^OTROS"))
@@ -171,7 +179,11 @@ plot_multipanel <- function(data, dicc, caletas = NULL, sp_remove = NULL, ylab_t
       theme(legend.text = element_text(size = 11))
     plot
   }
-  p_list <- map(data_desembarque_list, ~ plot_torta(.))
+  data_list <- data %>%
+    group_by(tipo) %>%
+    group_split() %>%
+    setNames(map(., ~ unique(.[["tipo"]])))
+  p_list <- map(data_list, ~ plot_torta(.))
   if (length(p_list) == 3) {
     layout_matrix <- matrix(c(1, 1, 2, 2, NA, 3, 3, NA), nrow = 2, byrow = TRUE)
   }
@@ -192,16 +204,16 @@ plot_multipanel <- function(data, dicc, caletas = NULL, sp_remove = NULL, ylab_t
   pos <- c("ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SEP", "OCT", "NOV", "DIC")
   plot_c <- ggplot(summ_tipo_mensual, aes(fill = tipo, y = desembarque_promedio, x = as.factor(Meses)), na.rm = T) +
     geom_bar(position = "stack", stat = "identity") +
-    ylab(ylab_text_c) +
-    xlab(xlab_text_c) +
-    scale_y_continuous(n.breaks = n_break_ylab) +
+    ylab(ylab_text_inf) +
+    xlab(xlab_text_inf) +
+    scale_y_continuous(n.breaks = n_ticks) +
     scale_x_discrete(limits = pos) +
     ggtitle(label = "Tipo Especies") +
     theme_light() +
     theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
-    scale_fill_manual(breaks = c("Peces", "Algas", "Invertebrados"), values = alpha(col_tipo, 0.7)) +
+    scale_fill_manual(breaks = c( "Algas", "Invertebrados","Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
   p_final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, rel_heights = c(1, 1, 1), rel_widths = c(1, 1, 1), align = "v")
-  ggsave(output_name, p_final, units = "in", width = width, height = height, dpi = 300)
+  ggsave(nombre_salida, p_final, units = "in", width = ancho, height =  alto, dpi = 300)
 }
