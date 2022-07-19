@@ -72,6 +72,6 @@ n_ticks <- 6
 nombre_salida <- "plot.png"
 n_pie <- 5
 dec_red <- 2
-plot_multipanel(datos = datos, dicc = dicc, caletas = caletas, especies_rm = especies_rm, col_especie = col_especie, ylab_text_sup = ylab_text_sup, xlab_text_sup = xlab_text_sup, ylab_text_inf = ylab_text_inf, xlab_text_inf = xlab_text_inf, ancho = ancho, alto = alto, nombre_salida = nombre_salida, n_pie = n_pie, dec_red = dec_red)
+plot_multipanel(datos = datos, dicc = dicc, caletas = caletas, especies_rm = especies_rm, col_especie = col_especie, ylab_text_sup = ylab_text_sup, xlab_text_sup = xlab_text_sup, ylab_text_inf = ylab_text_inf, xlab_text_inf = xlab_text_inf, ancho = ancho, alto = alto, nombre_salida = nombre_salida, n_tick = n_tick, n_pie = n_pie, dec_red = dec_red)
 }
 }
