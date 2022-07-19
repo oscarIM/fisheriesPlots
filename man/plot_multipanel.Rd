@@ -5,57 +5,73 @@
 \title{plot_multipanel}
 \usage{
 plot_multipanel(
-  data,
+  datos,
   dicc,
   caletas = NULL,
-  sp_remove = NULL,
-  ylab_text_a,
-  xlab_text_a,
-  ylab_text_c,
-  xlab_text_c,
-  n_break_ylab,
-  width,
-  height,
-  output_name,
-  n_pie,
-  round
+  especies_rm = NULL,
+  col_especie,
+  ylab_text_sup,
+  xlab_text_sup,
+  ylab_text_inf,
+  xlab_text_inf,
+  ancho,
+  alto,
+  nombre_salida = "plot.png",
+  n_ticks = 6,
+  n_pie = 5,
+  dec_red = 2
 )
 }
 \arguments{
-\item{data}{dataframe de entrada}
+\item{datos}{dataframe de entrada}
 
-\item{dir_input}{directory en donde se almacenan las imágenes L2}
+\item{dicc}{archivo diccionario de recursos, separado por "," XXX}
 
-\item{dir_output}{directory en donde se almacenaran las imágenes L3 resultantes}
+\item{caletas}{Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran}
 
-\item{var_name}{nombre de la variable a analizar ("chlor_a", "sst", "Rrs_645", "pic", "poc", "nflh", etc)}
+\item{especies_rm}{Vector con el nombre de las especies que se quieran eliminar del gráfico en el gráfico. Si NULL, se usaran todas las especies}
 
-\item{n_cores}{número de núcleos a usar. Por defecto, n_cores = 1 (corrida secuencial). La parelelización es respecto de la cantidad de sub_folder procesados simultaneamente}
+\item{ylab_text_sup}{Cadena de texto para el eje y del panel superior. Si NULL == "Desembarque total (Ton)"}
 
-\item{res_l2}{resolución para l2bin. Por defecto, res = "1" (H: 0.5km, Q: 250m, HQ: 100m, HH: 50m, 1: 1.1km, 2: 2.3km, 4: 4.6km, 9: 9.2km, 18: 18.5km, 36: 36km, 1D: 1 degree, HD: 0.5 degree, QD: 0.25 degree)}
+\item{xlab_text_sup}{Cadena de texto para el eje x del panel superior. Si NULL == "Años"}
 
-\item{res_l3}{resolución para l3mapgen. Por defecto, res = "1km" (36km: 1080 x 540, 18km: 2160 x 1080, 9km: 4320 x 2160, 4km: 8640 x 4320, 2km: 17280 x 8640, 1km: 34560 x 17280, hkm: 69120 x 34560, qkm: 138240 x 69120, smi: 4096 x 2048, smi4: 8192 x 4096, land: 8640 x 4320)}
+\item{ylab_text_inf}{Cadena de texto para el eje y del panel inferior. Si NULL == "Desembarque promedio (Ton)"}
 
-\item{north}{latitud norte para la generación de las imágenes L3}
+\item{xlab_text_inf}{Cadena de texto para el eje x del panel inferior. Si NULL == "Meses"}
 
-\item{south}{latitud sur para la generación de las imágenes L3}
+\item{nombre_salida}{Nombre figura incluyendo la extensión ("XXXX.png")}
 
-\item{west}{latitud oeste para la generación de las imágenes L3}
+\item{n_ticks}{Número de divisiones ejes y}
 
-\item{east}{latitud este para la generación de las imágenes L3}
+\item{n_pie}{Número de divisiones de la torta}
 
-\item{need_extract}{mantener sistema de archivos año/mes? (TRUE/FALSE).Por defecto, FALSE}
+\item{dec_red}{Número de decimales para los gráficos de torta}
 
-\item{sort_files}{crearr sistema de archivos año/mes? (TRUE/FALSE).Por defecto, FALSE}
+\item{col_especies}{columna que tiene que el nombre de las especies/recursos}
 }
 \value{
-imágenes L3
+imágenes png
 }
 \description{
 Función para realizar gráfico multipanel
 }
 \examples{
 \dontrun{
-code here
+datos <- read_tsv("data.txt", show_col_types = FALSE)
+dicc <- read_delim("diccionario_recursos.txt", delim = ";", show_col_types = FALSE)
+caletas <- "SAN VICENTE"
+col_especie <- "ESPECIE"
+especies_rm <- "SARDINA COMUN"
+ylab_text_sup <- "eje y"
+xlab_text_sup <- "eje x"
+ylab_text_inf <- "eje y"
+xlab_text_inf <- "eje x"
+ancho <- 12
+alto <- 8
+n_ticks <- 6
+nombre_salida <- "plot.png"
+n_pie <- 5
+dec_red <- 2
+plot_multipanel(datos = datos, dicc = dicc, caletas = caletas, especies_rm = especies_rm, col_especie = col_especie, ylab_text_sup = ylab_text_sup, xlab_text_sup = xlab_text_sup, ylab_text_inf = ylab_text_inf, xlab_text_inf = xlab_text_inf, ancho = ancho, alto = alto, nombre_salida = nombre_salida, n_pie = n_pie, dec_red = dec_red)
 }
 }
