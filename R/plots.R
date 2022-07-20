@@ -22,6 +22,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom purrr map
 #' @importFrom tidyr pivot_longer
+#' @importFrom forcats fct_inorder
 #' @export plot_multipanel
 #' @examples
 #' \dontrun{
