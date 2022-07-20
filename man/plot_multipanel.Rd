@@ -23,11 +23,11 @@ plot_multipanel(
 )
 }
 \arguments{
-\item{datos}{dataframe de entrada}
+\item{datos}{dataframe de entrada. Formato: separado por tab. (Tiene que tener: coluna que identifique a las especies/recurso, caletas, meses, años. Los meses representan el desembarco en ese mes/año)}
 
 \item{dicc}{archivo diccionario de recursos, separado por "," XXX}
 
-\item{caletas}{Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran}
+\item{caletas}{Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran todas}
 
 \item{especies_rm}{Vector con el nombre de las especies que se quieran eliminar del gráfico en el gráfico. Si NULL, se usaran todas las especies}
 
@@ -39,13 +39,17 @@ plot_multipanel(
 
 \item{xlab_text_inf}{Cadena de texto para el eje x del panel inferior. Si NULL == "Meses"}
 
+\item{ancho}{ancho de la imágen}
+
+\item{alto}{altura de la imágen}
+
 \item{nombre_salida}{Nombre figura incluyendo la extensión ("XXXX.png")}
 
 \item{n_ticks}{Número de divisiones ejes y}
 
 \item{n_pie}{Número de divisiones de la torta}
 
-\item{dec_red}{Número de decimales para los gráficos de torta}
+\item{dec_red}{Número de decimales para los porcentajes de los gráficos de torta}
 
 \item{col_especies}{columna que tiene que el nombre de las especies/recursos}
 }
@@ -53,7 +57,7 @@ plot_multipanel(
 imágenes png
 }
 \description{
-Función para realizar gráfico multipanel
+Función para hacer el gráfico del "multipanel"
 }
 \examples{
 \dontrun{

@@ -1,8 +1,8 @@
 #' @title plot_multipanel
-#' @description Función para realizar gráfico multipanel
-#' @param datos dataframe de entrada
+#' @description Función para hacer el gráfico del "multipanel"
+#' @param datos dataframe de entrada. Formato: separado por tab. (Tiene que tener: coluna que identifique a las especies/recurso, caletas, meses, años. Los meses representan el desembarco en ese mes/año)
 #' @param dicc archivo diccionario de recursos, separado por "," XXX
-#' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran
+#' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran todas
 #' @param col_especies columna que tiene que el nombre de las especies/recursos
 #' @param especies_rm Vector con el nombre de las especies que se quieran eliminar del gráfico en el gráfico. Si NULL, se usaran todas las especies
 #' @param ylab_text_sup Cadena de texto para el eje y del panel superior. Si NULL == "Desembarque total (Ton)"
@@ -11,8 +11,10 @@
 #' @param xlab_text_inf Cadena de texto para el eje x del panel inferior. Si NULL == "Meses"
 #' @param n_pie Número de divisiones de la torta
 #' @param n_ticks Número de divisiones ejes y
+#' @param alto altura de la imágen
+#' @param ancho ancho de la imágen
 #' @param nombre_salida Nombre figura incluyendo la extensión ("XXXX.png")
-#' @param dec_red Número de decimales para los gráficos de torta
+#' @param dec_red Número de decimales para los porcentajes de los gráficos de torta
 #' @return imágenes png
 #' @import ggplot2
 #' @import dplyr
@@ -179,7 +181,6 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
       scale_fill_manual(breaks = order, values = cols) +
       theme_void() +
       theme(legend.text = element_text(size = 11))
-    plot
   }
   data_list <- data %>%
     group_by(tipo) %>%
@@ -216,6 +217,119 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_fill_manual(breaks = c( "Algas", "Invertebrados","Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
-  p_final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, rel_heights = c(1, 1, 1), rel_widths = c(1, 1, 1), align = "v")
-  ggsave(nombre_salida, p_final, units = "in", width = ancho, height =  alto, dpi = 300)
+  final <- plot_a + plot_b + plot_c + plot_layout(widths = c(1, 1, 1), ncol = 1)
+  ggsave(nombre_salida, final, units = "in", width = ancho, height =  alto, dpi = 300)
+  dev.off()
 }
+#' @title plot_tipo_embarcacion
+#' @description Función para hacer el grafico del "tipo de embarcaciones"
+#' @param datos dataframe de entrada. Formato: separado por tab (Tiene que tener las columnas: caletas/caleta_inscripcion, material,tipo)
+#' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran todas
+#' @param col_caleta columna que tiene que el nombre de las caletas
+#' @param n_ticks Número de divisiones ejes y
+#' @param alto altura de la imágen
+#' @param ancho ancho de la imágen
+#' @param interv_potencia amplitud del intervalo para el subplot de potencia de las embarcaciones
+#' @param nombre_salida Nombre figura incluyendo la extensión ("XXXX.png")
+#' @return imágenes png
+#' @import ggplot2
+#' @import dplyr
+#' @import stringr
+#' @importFrom janitor clean_names
+#' @importFrom patchwork plot_annotation plot_layout
+#' @importFrom tidyr separate
+#' @export plot_embarcaciones
+#' @examples
+#' \dontrun{
+#' datos <- read_tsv("datos_tipo_embarcacion.txt", show_col_types = FALSE)
+#' caletas <- "SAN VICENTE"
+#' col_caleta <- "Caleta Inscripción"
+#' n_ticks <- 6
+#' interv_potencia <- 100
+#' alto <- 6
+#' ancho <- 8
+#' nombre_salida <- "test_p_embarcaciones.png"
+#' plot_embarcaciones(datos = datos,caletas = caletas,col_caleta = col_caleta,n_ticks = n_ticks,alto = alto,ancho = ancho,nombre_salida = nombre_salida)
+#' }
+plot_embarcaciones <- function(datos, caletas = NULL, col_caleta, n_ticks  = 6, alto, ancho, nombre_salida){
+  options(scipen = 999)
+  options(dplyr.summarise.inform = FALSE)
+  if (!missing(caletas)) {
+    data <- datos %>% filter(.[[col_caleta]] %in% caletas)
+    } else {
+      data <- datos
+      }
+  data <- data %>% clean_names()
+  data$tipo <- str_to_sentence(data$tipo)
+  data$material <- str_to_sentence(data$material)
+  ####plot tipo botes####
+  summ_tipo <- data %>% group_by(tipo) %>% summarise(numero_embarcaciones = n())
+  order_tipo <- c("Bote a motor", "Bote a remo o vela", "Lancha")
+  cols_tipo <- c("#999999", "#E69F00", "#56B4E9")
+  names(cols_tipo) <- order_tipo
+  cols_tipo <- cols_tipo[c(summ_tipo$tipo)]
+  order_tipo <- names(cols_tipo)
+  p_tipo_botes <- ggplot(summ_tipo, aes(x = tipo, y = numero_embarcaciones, fill = tipo)) +
+    geom_bar(stat = "identity", width = 0.5, color = cols_tipo) +
+    ylab("N° Botes Inscritos") +
+    xlab("Tipo de Embarcación") +
+    theme_bw() +
+    theme(legend.position = "none") +
+    geom_text(aes(label = numero_embarcaciones, vjust = -0.2, size = 0.7)) +
+    ylim(0, max(summ_tipo$numero_embarcaciones + 10)) +
+    theme(text = element_text(size = 12)) +
+    scale_fill_manual(breaks = order_tipo, values = cols_tipo)
+  ####Material de construcción####
+  summ_material <- data %>% group_by(material) %>% summarise(n = n())
+  ####plot  material bote
+  p_mater_botes <- ggplot(summ_material, aes(x = material, y = n, fill = material)) +
+  geom_bar(stat = "identity", color = "black", width = 0.5) +
+  ylab("N° Botes Inscritos") +
+  xlab("Material de Construcción") +
+  theme_bw() +
+  theme(legend.position = "none") +
+  geom_text(aes(label = n, vjust = -0.2, size = 0.7)) +
+  ylim(0, max(summ_material$n + 10)) +
+  scale_fill_manual(values = rep("Gray50", 3)) +
+  theme(text = element_text(size = 12))
+  #Potencia. datos no tienen potencia, por eso lo pintamos ..quizas cambiar los colores
+ #summ_potencia  <- data %>% filter(tipo == "Bote a motor") 
+name_potencia <- data %>% dplyr::select(starts_with("potencia")) %>% colnames(.)
+data_potencia <- data %>%  select(all_of(name_potencia),tipo)
+summ_potencia <- data_potencia %>% mutate(intervalo = cut_interval(.[[name_potencia]], length = interv_potencia))  %>% group_by(tipo, intervalo) %>%  summarise(cuenta = n())
+## acortar con este ejemplo
+remove <- c("\\(", "\\)", "]", "\\[")
+summ_potencia$intervalo <- str_remove_all(summ_potencia$intervalo, paste(remove, collapse = "|"))
+summ_potencia$intervalo <- str_replace(summ_potencia$intervalo, ",", "-")
+#summ_potencia$intervalo <- factor(summ_potencia$intervalo, levels = summ_potencia$intervalo)
+summ_potencia <- summ_potencia %>%
+  separate(col = intervalo, into = c("min", "max"), sep = "-", remove = FALSE) %>%
+  mutate(min = as.numeric(min),
+         max = as.numeric(max)) %>%
+  mutate(label = ifelse(max <= 200, intervalo, "200+"))
+n_cat <- unique(summ_potencia$label)
+summ_potencia <- summ_potencia %>% group_by(label,tipo) %>% summarise(n_total = sum(cuenta))
+summ_potencia$label <- factor(summ_potencia$label, levels = n_cat)
+#summ_potencia <- data %>% group_by(potencia_hp, tipo) %>% summarise(Freq = n())
+ ######cambiar el tipo de grafico
+order_tipo <- c("Bote a motor", "Bote a remo o vela", "Lancha")
+cols_tipo <- c("#999999", "#E69F00", "#56B4E9")
+names(cols_tipo) <- order_tipo
+cols_tipo <- cols_tipo[c(summ_potencia$tipo)]
+order_tipo <- names(cols_tipo)
+p_potencia_botes <- ggplot(summ_potencia, aes(x = label, y = n_total, fill = tipo)) +
+  geom_bar(position = "stack", stat = "identity", width = 0.5) +
+  labs(x = "Categorias Potencia (HP)", y = "N° Botes Inscritos", fill = "Tipo Embarcación") +
+  scale_y_continuous(n.breaks = n_ticks) +
+  scale_fill_manual(breaks = c("Bote a motor", "Bote a remo o vela", "Lancha"), values = cols_tipo) +
+  theme_light()
+#p_potencia_botes  
+#Eslora Promedio
+name_eslora <- data %>% dplyr::select(starts_with("eslora")) %>% colnames(.)
+summ_eslora <- data %>% group_by(material) %>% summarise(mean = mean(.[[name_eslora]]), sd = sd(.[[name_eslora]]))
+p_eslora <- ggplot(summ_eslora, aes(x = material, y = mean, fill = material)) + ylab("Eslora Promedio (m)") + xlab("Material de Construcción") + geom_bar(stat = "identity",color = "black", position = position_dodge(), width = 0.5) + geom_errorbar(aes(ymin = mean - sd, ymax = mean + sd), width = .2, position = position_dodge(.9)) + scale_fill_manual(values = rep("Gray50",3)) + theme_bw() + theme(text = element_text(size = 12), legend.position = "none")
+tmp <- p_tipo_botes + p_mater_botes + p_potencia_botes + p_eslora + plot_layout(widths = c(1, 1))
+final <- tmp + plot_annotation(tag_levels = 'a')
+ggsave(nombre_salida, final, width = ancho, height = alto, dpi = 300)
+}
+
