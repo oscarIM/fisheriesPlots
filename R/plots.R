@@ -218,7 +218,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
   final <- plot_a + plot_b + plot_c + plot_layout(widths = c(1, 1, 1), ncol = 1)
-  ggsave(nombre_salida, final, units = "in", width = ancho, height = alto, dpi = 300)
+  ggsave(filename = nombre_salida, plot = final, units = "in", width = ancho, height = alto, dpi = 300)
   dev.off()
 }
 #' @title plot_tipo_embarcacion
@@ -356,10 +356,10 @@ plot_embarcaciones <- function(datos, caletas = NULL, col_caleta, n_ticks = 6, a
     theme(text = element_text(size = 12), legend.position = "none")
   tmp <- p_tipo_botes + p_mater_botes + p_potencia_botes + p_eslora + plot_layout(widths = c(1, 1))
   final <- tmp + plot_annotation(tag_levels = "a")
-  ggsave(nombre_salida, final, width = ancho, height = alto, dpi = 300)
+  ggsave(filename = nombre_salida, plot = final, width = ancho, height = alto, dpi = 300)
 }
-#' @title plot_torta_caletas
-#' @description Función para hacer el grafico del "tipo de embarcaciones"
+#' @title plot_torta_pescadores
+#' @description Función para hacer el grafico de torta que categorias de pescador por caleta
 #' @param datos dataframe de entrada. Formato: separado por tab (Tiene que tener las columnas: caletas/caleta_inscripcion, material,tipo)
 #' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran todas las presentes en el set  de datos
 #' @param col_caleta columna que tiene que el nombre de las caletas
@@ -375,7 +375,7 @@ plot_embarcaciones <- function(datos, caletas = NULL, col_caleta, n_ticks = 6, a
 #' @importFrom janitor clean_names
 #' @importFrom patchwork wrap_plots
 #' @importFrom tidyr pivot_longer
-#' @export plot_torta_caletas
+#' @export plot_torta_pescadores
 #' @examples
 #' \dontrun{
 #' datos <- read_tsv("data_pescador.txt", show_col_types = FALSE)
@@ -385,9 +385,9 @@ plot_embarcaciones <- function(datos, caletas = NULL, col_caleta, n_ticks = 6, a
 #' ancho <- 9
 #' n_col <- 2
 #' nombre_salida <- "test_plot_torta_caletas.png"
-#' plot_torta_caletas(datos = datos, caletas = caletas, col_caleta = col_caleta, alto = alto, ancho = ancho, n_col = n_col, nombre_salida = nombre_salida)
+#' plot_torta_pescadores(datos = datos, caletas = caletas, col_caleta = col_caleta, alto = alto, ancho = ancho, n_col = n_col, nombre_salida = nombre_salida)
 #' }
-plot_torta_caletas <- function(datos, col_caleta, caletas, ancho, alto, n_col, nombre_salida) {
+plot_torta_pescadores <- function(datos, col_caleta, caletas, ancho, alto, n_col, nombre_salida) {
   options(scipen = 999)
   options(dplyr.summarise.inform = FALSE)
   data <- datos %>%
@@ -445,5 +445,71 @@ plot_torta_caletas <- function(datos, col_caleta, caletas, ancho, alto, n_col, n
     setNames(map(., ~ unique(.[[col_caleta]])))
   list_plot <- map(summ_torta_list, ~ fn_plot_pie(.))
   final <- wrap_plots(list_plot, ncol = n_col)
-  ggsave(nombre_salida, final, width = ancho, height = alto, dpi = 300)
+  ggsave(filename = nombre_salida, plot = final, width = ancho, height = alto, dpi = 300)
+}
+#' @title plot_barra_pescadores
+#' @description Función para hacer el grafico de barra muestra el total de pescadores por caleta junto a la categoria de pescadores
+#' @param datos dataframe de entrada. Formato: separado por tab (Tiene que tener las columnas: caletas/caleta_inscripcion, material,tipo)
+#' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran todas las presentes en el set  de datos
+#' @param col_caleta columna que tiene que el nombre de las caletas
+#' @param ylab_text Cadena de texto para el eje y del panel. Si NULL == "N° de Pescadores Inscritos"
+#' @param xlab_text  Cadena de texto para el eje x. Si NULL == "Caletas"
+#' @param alto altura de la imágen
+#' @param ancho ancho de la imágen
+#' @param n_ticks Número de divisiones ejes y
+#' @param nombre_salida Nombre figura incluyendo la extensión ("XXXX.png")
+#' @return imágenes png
+#' @import ggplot2
+#' @import dplyr
+#' @import stringr
+#' @importFrom janitor clean_names
+#' @importFrom tidyr pivot_longer
+#' @export plot_barra_pescadores
+#' @examples
+#' \dontrun{
+#' datos <- read_tsv("data_pescador.txt", show_col_types = FALSE)
+#' col_caleta <- "Caleta"
+#' ylab
+#' alto <- 6
+#' ancho <- 9
+#' n_ticks <- 6
+#' nombre_salida <- "test_plot_barra_pescadores.png"
+#' plot_barra_pescadores(datos = datos, col_caleta = col_caleta, alto = alto, ancho = ancho, n_ticks = n_ticks, nombre_salida = nombre_salida)
+#' }
+plot_barra_pescadores <- function(datos, caletas = NULL, col_caleta, ylab_text = "N° de Pescadores Inscritos", xlab_text = "Caletas", n_ticks, ancho, alto,  nombre_salida) {
+  options(scipen = 999)
+  options(dplyr.summarise.inform = FALSE)
+  data <- datos %>%
+    rename_all(., .funs = str_to_lower) %>%
+    clean_names()
+  col_caleta <- str_to_lower(col_caleta)
+  data <- data %>% mutate(nombre_pescador = str_to_upper(nombre_pescador))
+    if (missing(caletas)) {
+    data <- data
+  } else {
+    data <- data %>% filter(.[[col_caleta]] %in% caletas)
+  }
+  data <- data %>%
+    select(all_of(col_caleta), nombre_pescador, armador:pescador) %>%
+    mutate_at(vars(armador:pescador), ~ replace(., is.na(.), 0)) %>%
+    mutate(across(.fns = ~ replace(., . == "X", 1))) %>%
+    group_by(across(all_of(col_caleta)), nombre_pescador) %>%
+    summarise_at(vars(armador:pescador), max) %>%
+    pivot_longer(cols = armador:pescador, names_to = "categoria_pescador", values_to = "n_categoria") %>%
+    mutate(n_categoria = as.numeric(n_categoria))
+  ##plot
+  summ <- data %>% 
+    group_by(across(all_of(col_caleta))) %>% summarise(total_tipo = length(unique(nombre_pescador)))
+  plot_bar_pescadores <- ggplot(summ, aes(y = total_tipo, x = as.factor(.data[[col_caleta]])), label = total_tipo, na.rm = T) +
+  geom_bar(position = "stack", stat = "identity") +
+  ylab(ylab_text) +
+  xlab(xlab_text) +
+  scale_y_continuous(n.breaks = n_ticks) +
+  ggtitle(label = "N° Pescadores por caleta") +
+  theme_light() +
+  theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
+  theme(legend.position = "top") +
+  theme(legend.title = element_blank()) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+  ggsave(filename = nombre_salida, plot = plot_bar_pescadores, width = ancho, height = alto, units = "in", dpi = 300)
 }

@@ -47,6 +47,6 @@ interv_potencia <- 100
 alto <- 6
 ancho <- 8
 nombre_salida <- "test_plot_embarcaciones.png"
-plot_embarcaciones(datos = datos,caletas = caletas,col_caleta = col_caleta,n_ticks = n_ticks,alto = alto,ancho = ancho,nombre_salida = nombre_salida)
+plot_embarcaciones(datos = datos, caletas = caletas, col_caleta = col_caleta, n_ticks = n_ticks, alto = alto, ancho = ancho, nombre_salida = nombre_salida)
 }
 }
