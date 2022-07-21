@@ -40,7 +40,7 @@
 #' ancho <- 12
 #' alto <- 8
 #' n_ticks <- 6
-#' nombre_salida <- "plot.png"
+#' nombre_salida <- "test_plot_multipanel"
 #' n_pie <- 5
 #' dec_red <- 2
 #' plot_multipanel(datos = datos, dicc = dicc, caletas = caletas, especies_rm = especies_rm, col_especie = col_especie, ylab_text_sup = ylab_text_sup, xlab_text_sup = xlab_text_sup, ylab_text_inf = ylab_text_inf, xlab_text_inf = xlab_text_inf, ancho = ancho, alto = alto, nombre_salida = nombre_salida, n_tick = n_tick, n_pie = n_pie, dec_red = dec_red)
@@ -248,7 +248,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
 #' interv_potencia <- 100
 #' alto <- 6
 #' ancho <- 8
-#' nombre_salida <- "test_p_embarcaciones.png"
+#' nombre_salida <- "test_plot_embarcaciones.png"
 #' plot_embarcaciones(datos = datos,caletas = caletas,col_caleta = col_caleta,n_ticks = n_ticks,alto = alto,ancho = ancho,nombre_salida = nombre_salida)
 #' }
 plot_embarcaciones <- function(datos, caletas = NULL, col_caleta, n_ticks  = 6, alto, ancho, nombre_salida){
@@ -259,9 +259,12 @@ plot_embarcaciones <- function(datos, caletas = NULL, col_caleta, n_ticks  = 6, 
     } else {
       data <- datos
       }
-  data <- data %>% clean_names()
-  data$tipo <- str_to_sentence(data$tipo)
-  data$material <- str_to_sentence(data$material)
+  data <- data %>%
+  clean_names() %>%
+  mutate(
+    tipo = str_to_sentence(tipo),
+    material = str_to_sentence(material)
+  )
   ####plot tipo botes####
   summ_tipo <- data %>% group_by(tipo) %>% summarise(numero_embarcaciones = n())
   order_tipo <- c("Bote a motor", "Bote a remo o vela", "Lancha")
@@ -308,10 +311,9 @@ summ_potencia <- summ_potencia %>%
          max = as.numeric(max)) %>%
   mutate(label = ifelse(max <= 200, intervalo, "200+"))
 n_cat <- unique(summ_potencia$label)
-summ_potencia <- summ_potencia %>% group_by(label,tipo) %>% summarise(n_total = sum(cuenta))
+summ_potencia <- summ_potencia %>% group_by(label, tipo) %>% summarise(n_total = sum(cuenta))
 summ_potencia$label <- factor(summ_potencia$label, levels = n_cat)
-#summ_potencia <- data %>% group_by(potencia_hp, tipo) %>% summarise(Freq = n())
- ######cambiar el tipo de grafico
+######cambiar el tipo de grafico
 order_tipo <- c("Bote a motor", "Bote a remo o vela", "Lancha")
 cols_tipo <- c("#999999", "#E69F00", "#56B4E9")
 names(cols_tipo) <- order_tipo
@@ -332,4 +334,88 @@ tmp <- p_tipo_botes + p_mater_botes + p_potencia_botes + p_eslora + plot_layout(
 final <- tmp + plot_annotation(tag_levels = 'a')
 ggsave(nombre_salida, final, width = ancho, height = alto, dpi = 300)
 }
+#' @title plot_torta_caletas
+#' @description Función para hacer el grafico del "tipo de embarcaciones"
+#' @param datos dataframe de entrada. Formato: separado por tab (Tiene que tener las columnas: caletas/caleta_inscripcion, material,tipo)
+#' @param caletas Vector con el nombre de las caletas que se quieran incluir en el gráfico. Si NULL, se usaran todas las presentes en el set  de datos
+#' @param col_caleta columna que tiene que el nombre de las caletas
+#' @param alto altura de la imágen
+#' @param ancho ancho de la imágen
+#' @param ncol numero de columnas de la imágen
+#' @param nombre_salida Nombre figura incluyendo la extensión ("XXXX.png")
+#' @return imágenes png
+#' @import ggplot2
+#' @import dplyr
+#' @import stringr
+#' @importFrom purrr map
+#' @importFrom janitor clean_names
+#' @importFrom patchwork wrap_plots
+#' @importFrom tidyr pivot_longer
+#' @export plot_torta_caletas
+#' @examples
+#' \dontrun{
+#' datos <- read_tsv("data_pescador.txt", show_col_types = FALSE)
+#' col_caleta <- "Caleta"
+#' caletas <- unique(datos$Caleta)[3:6]
+#' alto <- 6
+#' ancho <- 9
+#' n_col <- 2
+#' nombre_salida <- "test_plot_torta_caletas.png"
+#' plot_torta_caletas(datos = datos, caletas = caletas,col_caleta = col_caleta, alto = alto, ancho = ancho, n_col = n_col, nombre_salida = nombre_salida)
+#' }
+plot_torta_caletas <- function(datos, col_caleta, caletas, ancho, alto, n_col, nombre_salida) {
+  options(scipen = 999)
+ options(dplyr.summarise.inform = FALSE)
+ data <- datos %>%
+   rename_all(., .funs = str_to_lower) %>%
+   clean_names()
+ col_caleta <- str_to_lower(col_caleta)
+ data <- data %>% mutate(nombre_pescador = str_to_upper(nombre_pescador))
 
+ if (missing(caletas)) {
+   data <- data
+ } else {
+   data <- data %>% filter(.[[col_caleta]] %in% caletas)
+ }
+ data <- data %>%
+   select(all_of(col_caleta), nombre_pescador, armador:pescador) %>%
+   mutate_at(vars(armador:pescador), ~ replace(., is.na(.), 0)) %>%
+   mutate(across(.fns = ~ replace(., . == "X", 1))) %>%
+   group_by(across(all_of(col_caleta)), nombre_pescador) %>%
+   summarise_at(vars(armador:pescador), max) %>%
+   pivot_longer(cols = armador:pescador, names_to = "categoria_pescador", values_to = "n_categoria") %>%
+   mutate(n_categoria = as.numeric(n_categoria))
+ ##summary total
+ summ <- data %>% group_by(across(all_of(col_caleta))) %>% summarise(total_pescadores = length(unique(nombre_pescador)))
+#summ for pie
+summ_torta <- data %>%
+  group_by(across(all_of(col_caleta)), categoria_pescador) %>%
+  summarise(total_tipo = sum(n_categoria, na.rm = T)) %>%
+  mutate(perct = total_tipo / sum(total_tipo) * 100, 
+         label = paste0(round(perct, 2), " ", "%"),
+         categoria_pescador = str_to_sentence(categoria_pescador),
+         categoria_pescador_label = paste0(str_to_sentence(categoria_pescador), " ", "(", label, ")"))
+summ_torta <- left_join(summ_torta, summ, by = col_caleta)
+##funcion para plotear 1 torta
+fn_plot_pie <- function(data) {
+  cols <- c("#a5a5a5", "#fdbf2e", "#ea7d3c", "#4674c2")
+  names(cols) <- data$categoria_pescador_label
+  title <- paste0("Caleta", " ", unique(data[[col_caleta]]), " ", "(N =", " ", unique(data$total_pescadores),")")
+  plot_pie <- ggplot(data, aes(x = "", y = total_tipo, fill = fct_inorder(categoria_pescador_label))) +
+    geom_col(width = 1, color = "white") +
+    coord_polar("y", start = 0, direction = -1) +
+    guides(fill = guide_legend(title = "Categoría de Pescador", ncol = 1)) +
+    theme_void() +
+    theme(legend.text = element_text(size = 11)) +
+    scale_fill_manual(breaks = names(cols), values = cols) +
+    ggtitle(label = title) +
+    theme(plot.title = element_text(hjust = 0.5))
+}
+summ_torta_list <- summ_torta %>%
+  group_by(across(all_of(col_caleta))) %>%
+  group_split() %>%
+  setNames(map(., ~ unique(.[[col_caleta]])))
+list_plot <- map(summ_torta_list, ~ fn_plot_pie(.)) 
+final <- wrap_plots(list_plot, ncol = n_col) 
+ggsave(nombre_salida, final, width = ancho, height = alto, dpi = 300)
+}
