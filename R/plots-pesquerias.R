@@ -21,10 +21,10 @@
 #' @import stringr
 #' @importFrom janitor clean_names
 #' @importFrom RColorBrewer brewer.pal
-#' @importFrom gridExtra grid.arrange
 #' @importFrom purrr map
 #' @importFrom tidyr pivot_longer
 #' @importFrom forcats fct_inorder
+#' @importFrom patchwork plot_layout
 #' @export plot_multipanel
 #' @examples
 #' \dontrun{
