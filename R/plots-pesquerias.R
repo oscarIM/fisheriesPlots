@@ -180,10 +180,12 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
       guides(fill = guide_legend(title = title, ncol = 1)) +
       scale_fill_manual(breaks = order, values = cols) +
       theme_void() +
-      theme(legend.key.height = unit(0.2, 'cm'),
-            legend.key.width = unit(0.2, 'cm'),
-            legend.title = element_text(size = 9),
-            legend.text = element_text(size = 7))
+      theme(
+        legend.key.height = unit(0.2, "cm"),
+        legend.key.width = unit(0.2, "cm"),
+        legend.title = element_text(size = 9),
+        legend.text = element_text(size = 7)
+      )
   }
   data_list <- data %>%
     group_by(tipo) %>%
@@ -192,27 +194,27 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
   p_list <- map(data_list, ~ plot_torta(.))
   if (length(p_list) == 3) {
     layout_matrix <- matrix(c(1, 1, 2, 2, NA, 3, 3, NA), nrow = 2, byrow = TRUE)
-    #layout <- c(
+    # layout <- c(
     #  area(1, 1),
     #  area(1, 3),
     #  area(3, 2))
-      }
+  }
   if (length(p_list) == 2) {
     layout_matrix <- matrix(c(1, 1, 2, 2), nrow = 1, byrow = TRUE)
-    #layout <- c(
+    # layout <- c(
     #  area(2, 1),
     #  area(2, 3)
-    #)
-    }
+    # )
+  }
   if (length(p_list) == 1) {
     layout_matrix <- matrix(c(1, 1), nrow = 1, byrow = TRUE)
-    #layout <- c(
+    # layout <- c(
     #  area(2, 2)
-    #)
+    # )
   }
-  #cambiar a patchwork: usar design en vez de layout_matrix:
-  #plot_b <- wrap_plots(p_list)
-  #plot_b <- plot_b + plot_layout(design = layout, widths = 1)
+  # cambiar a patchwork: usar design en vez de layout_matrix:
+  # plot_b <- wrap_plots(p_list)
+  # plot_b <- plot_b + plot_layout(design = layout, widths = 1)
   plot_b <- grid.arrange(grobs = p_list, layout_matrix = layout_matrix)
   ##### plot C: desembarco promedio por medio por tipo de recurso#####
   summ_tipo_mensual <- data %>%
@@ -493,7 +495,7 @@ plot_torta_pescadores <- function(datos, col_caleta, caletas, ancho, alto, n_col
 #' nombre_salida <- "test_plot_barra_pescadores.png"
 #' plot_barra_pescadores(datos = datos, col_caleta = col_caleta, alto = alto, ancho = ancho, n_ticks = n_ticks, nombre_salida = nombre_salida)
 #' }
-plot_barra_pescadores <- function(datos, caletas = NULL, col_caleta, ylab_text = "N° de Pescadores Inscritos", xlab_text = "Caletas", n_ticks, ancho, alto,  nombre_salida) {
+plot_barra_pescadores <- function(datos, caletas = NULL, col_caleta, ylab_text = "N° de Pescadores Inscritos", xlab_text = "Caletas", n_ticks, ancho, alto, nombre_salida) {
   options(scipen = 999)
   options(dplyr.summarise.inform = FALSE)
   data <- datos %>%
@@ -501,7 +503,7 @@ plot_barra_pescadores <- function(datos, caletas = NULL, col_caleta, ylab_text =
     clean_names()
   col_caleta <- str_to_lower(col_caleta)
   data <- data %>% mutate(nombre_pescador = str_to_upper(nombre_pescador))
-    if (missing(caletas)) {
+  if (missing(caletas)) {
     data <- data
   } else {
     data <- data %>% filter(.[[col_caleta]] %in% caletas)
@@ -514,19 +516,20 @@ plot_barra_pescadores <- function(datos, caletas = NULL, col_caleta, ylab_text =
     summarise_at(vars(armador:pescador), max) %>%
     pivot_longer(cols = armador:pescador, names_to = "categoria_pescador", values_to = "n_categoria") %>%
     mutate(n_categoria = as.numeric(n_categoria))
-  ##plot
-  summ <- data %>% 
-    group_by(across(all_of(col_caleta))) %>% summarise(total_tipo = length(unique(nombre_pescador)))
+  ## plot
+  summ <- data %>%
+    group_by(across(all_of(col_caleta))) %>%
+    summarise(total_tipo = length(unique(nombre_pescador)))
   plot_bar_pescadores <- ggplot(summ, aes(y = total_tipo, x = as.factor(.data[[col_caleta]])), label = total_tipo, na.rm = T) +
-  geom_bar(position = "stack", stat = "identity") +
-  ylab(ylab_text) +
-  xlab(xlab_text) +
-  scale_y_continuous(n.breaks = n_ticks) +
-  ggtitle(label = "N° Pescadores por caleta") +
-  theme_light() +
-  theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
-  theme(legend.position = "top") +
-  theme(legend.title = element_blank()) +
-  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
+    geom_bar(position = "stack", stat = "identity") +
+    ylab(ylab_text) +
+    xlab(xlab_text) +
+    scale_y_continuous(n.breaks = n_ticks) +
+    ggtitle(label = "N° Pescadores por caleta") +
+    theme_light() +
+    theme(plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
+    theme(legend.position = "top") +
+    theme(legend.title = element_blank()) +
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1))
   ggsave(filename = nombre_salida, plot = plot_bar_pescadores, width = ancho, height = alto, units = "in", dpi = 300)
 }
