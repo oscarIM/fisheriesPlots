@@ -24,7 +24,7 @@
 #' @importFrom purrr map
 #' @importFrom tidyr pivot_longer
 #' @importFrom forcats fct_inorder
-#' @importFrom patchwork plot_layout
+#' @importFrom gridExtra grid.arrange
 #' @export plot_multipanel
 #' @examples
 #' \dontrun{
@@ -180,7 +180,10 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
       guides(fill = guide_legend(title = title, ncol = 1)) +
       scale_fill_manual(breaks = order, values = cols) +
       theme_void() +
-      theme(legend.text = element_text(size = 11))
+      theme(legend.key.height = unit(0.2, 'cm'),
+            legend.key.width = unit(0.2, 'cm'),
+            legend.title = element_text(size = 9),
+            legend.text = element_text(size = 7))
   }
   data_list <- data %>%
     group_by(tipo) %>%
@@ -189,13 +192,27 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
   p_list <- map(data_list, ~ plot_torta(.))
   if (length(p_list) == 3) {
     layout_matrix <- matrix(c(1, 1, 2, 2, NA, 3, 3, NA), nrow = 2, byrow = TRUE)
-  }
+    #layout <- c(
+    #  area(1, 1),
+    #  area(1, 3),
+    #  area(3, 2))
+      }
   if (length(p_list) == 2) {
     layout_matrix <- matrix(c(1, 1, 2, 2), nrow = 1, byrow = TRUE)
-  }
+    #layout <- c(
+    #  area(2, 1),
+    #  area(2, 3)
+    #)
+    }
   if (length(p_list) == 1) {
     layout_matrix <- matrix(c(1, 1), nrow = 1, byrow = TRUE)
+    #layout <- c(
+    #  area(2, 2)
+    #)
   }
+  #cambiar a patchwork: usar design en vez de layout_matrix:
+  #plot_b <- wrap_plots(p_list)
+  #plot_b <- plot_b + plot_layout(design = layout, widths = 1)
   plot_b <- grid.arrange(grobs = p_list, layout_matrix = layout_matrix)
   ##### plot C: desembarco promedio por medio por tipo de recurso#####
   summ_tipo_mensual <- data %>%
@@ -217,9 +234,9 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
-  final <- plot_a + plot_b + plot_c + plot_layout(widths = c(1, 1, 1), ncol = 1)
-  ggsave(filename = nombre_salida, plot = final, units = "in", width = ancho, height = alto, dpi = 300)
+  final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, rel_heights = c(1, 1, 1), rel_widths = c(1, 1, 1), align = "v")
   dev.off()
+  ggsave(filename = nombre_salida, plot = final, units = "in", width = ancho, height = alto, dpi = 300)
 }
 #' @title plot_tipo_embarcacion
 #' @description Función para hacer el grafico del "tipo de embarcaciones"
