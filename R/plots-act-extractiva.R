@@ -51,10 +51,10 @@ plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_
   # pos_month <- pos_month[pos_indx]
   # grafico barra: Desembarco total por mes y por caleta
   col_caleta <- str_to_lower(col_caleta)
-  d1 <- data %>%
+  data_tmp <- data %>%
     group_by(mes, across(all_of(col_caleta))) %>%
     summarise(total_desembarque = sum(desembarque, na.rm = T))
-  p_desem_total <- ggplot(d1, aes(x = mes, y = total_desembarque, fill = d1[[col_caleta]])) +
+  p_desem_total <- ggplot(data_tmp, aes(x = mes, y = total_desembarque, fill = .data[[col_caleta]])) +
     geom_bar(position = "stack", stat = "identity", width = 0.5, color = "black") +
     ylab("Desembarque Total \n (N° Individuos)") +
     xlab("Meses") +
