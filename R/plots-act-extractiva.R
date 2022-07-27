@@ -75,9 +75,10 @@ plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_
     scale_fill_discrete(limits = orden_caletas)
   ggsave(filename = paste0(nombre_salida_prefix, "_desembarco_avg.png"), plot = p_desemb_promedio, dpi = 300, height = alto, width = ancho)
   # grafico boxplot: tiempo de viaje promedio
-  data_tmp <- data %>%
-    mutate(horas_viaje = as.numeric(horas_viaje)) %>%
-    filter(!is.na(horas_viaje))
+  data_tiempo <- data %>%
+    mutate(horas_viaje = as.numeric(horas_viaje),
+           horas_faena = as.numeric(horas_faena))
+  data_tmp <- data_tiempo %>% drop_na(horas_viaje)
   p_tiempo_viaje_promedio <- ggplot(data_tmp, aes(fill = .data[[col_caleta]], y = horas_viaje, x = mes)) +
     geom_boxplot() +
     xlab("Meses") +
@@ -88,9 +89,7 @@ plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_
     scale_fill_discrete(limits = orden_caletas)
   ggsave(filename = paste0(nombre_salida_prefix, "_tiempo_viaje_avg.png"), plot = p_tiempo_viaje_promedio, dpi = 300, height = alto, width = ancho)
   # grafico boxplot: tiempo de faena promedio
-  data_tmp <- data %>%
-    mutate(horas_faena = as.numeric(horas_faena)) %>%
-    filter(!is.na(horas_faena))
+  data_tmp <- data_tiempo %>% drop_na(horas_faena)
   p_tiempo_faena_promedio <- ggplot(data_tmp, aes(fill = .data[[col_caleta]], y = horas_faena, x = mes)) +
     geom_boxplot() +
     xlab("Meses") +
