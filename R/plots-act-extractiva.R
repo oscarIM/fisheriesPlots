@@ -87,7 +87,7 @@ plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_
     scale_x_discrete(limits = pos_month) +
     scale_fill_discrete(limits = orden_caletas)
   ggsave(filename = paste0(nombre_salida_prefix, "_tiempo_viaje_avg.png"), plot = p_tiempo_viaje_promedio, dpi = 300, height = alto, width = ancho)
-  # grafico boxplot: tiempo de viaje promedio
+  # grafico boxplot: tiempo de faena promedio
   data_tmp <- data %>%
     mutate(horas_faena = as.numeric(horas_faena)) %>%
     filter(!is.na(horas_faena))
