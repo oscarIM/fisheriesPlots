@@ -86,7 +86,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_y_continuous(n.breaks = n_ticks) +
     ggtitle(label = "Tipo Especies") +
     theme_light() +
-    theme(legend.spacing.x = unit(0.5, 'cm'),plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
+    theme(legend.spacing.x = unit(0.35, 'cm'),plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
@@ -232,7 +232,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_x_discrete(limits = pos) +
     ggtitle(label = "Tipo Especies") +
     theme_light() +
-    theme(legend.spacing.x = unit(0.25, 'cm'),plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
+    theme(legend.spacing.x = unit(0.35, 'cm'),plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
