@@ -30,7 +30,7 @@
 #' plot_act_extractiva(datos = datos, col_especie = col_especie, especie = especie, col_caleta = col_caleta, col_especie = col_especie, orden_caletas = orden_caletas, nombre_salida_prefix = nombre_salida_prefix, ancho = ancho, alto = alto)
 #' }
 #' 
-plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_caletas,
+plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_caletas = NULL,
                                 nombre_salida_prefix, ancho, alto) {
   ## se asume que todos los meses son del mismo año
   options(scipen = 999)
