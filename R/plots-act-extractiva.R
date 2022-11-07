@@ -12,8 +12,10 @@
 #' @import ggplot2
 #' @import dplyr
 #' @import stringr
+#' @import readr
 #' @importFrom janitor clean_names
 #' @importFrom lubridate myd month
+#' @importFrom tidyr drop_na
 #' @export plot_act_extractiva
 #' @examples
 #' \dontrun{
@@ -27,15 +29,23 @@
 #' alto <- 5
 #' plot_act_extractiva(datos = datos, col_especie = col_especie, especie = especie, col_caleta = col_caleta, col_especie = col_especie, orden_caletas = orden_caletas, nombre_salida_prefix = nombre_salida_prefix, ancho = ancho, alto = alto)
 #' }
+#' 
 plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_caletas,
                                 nombre_salida_prefix, ancho, alto) {
   ## se asume que todos los meses son del mismo año
   options(scipen = 999)
   options(dplyr.summarise.inform = FALSE)
   # desembarque total, talla promedio, tiempo faena promedio tiempo viaje
-  data <- datos %>%
-    filter(.[[col_caleta]] %in% orden_caletas, .[[col_especie]] %in% especie) %>%
-    clean_names()
+  data <- read_tsv(data_file, show_col_types = FALSE)
+  if(!is.null(orden_caletas)){
+    data <- data %>%
+      filter(.[[col_caleta]] %in% orden_caletas, .[[col_especie]] %in% especie) %>%
+      clean_names()
+  } else {
+    data <- data %>%
+      filter(.[[col_especie]] %in% especie) %>%
+      clean_names()
+  }
   # cambio unidades#
   unidades <- unique(data$um)
   patterns <- paste0(unidades, collapse = "|")
@@ -63,7 +73,7 @@ plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_
     theme_light() +
     guides(fill = guide_legend(title = "Caletas", ncol = 1)) +
     scale_fill_discrete(limits = orden_caletas)
-  ggsave(filename = paste0(nombre_salida_prefix, "_desembarco_ind.png"), plot = p_desem_total, dpi = 300, height = alto, width = ancho)
+  ggsave(filename = paste0(nombre_salida_prefix, "_desembarque_ind.png"), plot = p_desem_total, dpi = 300, height = alto, width = ancho)
   # grafico boxplot: Desembarco promedio por mes y por caleta#
   p_desemb_promedio <- ggplot(data, aes(fill = .data[[col_caleta]], y = desembarque, x = mes)) +
     geom_boxplot() +
@@ -73,7 +83,7 @@ plot_act_extractiva <- function(datos, col_especies, especie, col_caleta, orden_
     guides(fill = guide_legend(title = "Caletas", ncol = 1)) +
     scale_x_discrete(limits = pos_month) +
     scale_fill_discrete(limits = orden_caletas)
-  ggsave(filename = paste0(nombre_salida_prefix, "_desembarco_avg.png"), plot = p_desemb_promedio, dpi = 300, height = alto, width = ancho)
+  ggsave(filename = paste0(nombre_salida_prefix, "_desembarque_avg.png"), plot = p_desemb_promedio, dpi = 300, height = alto, width = ancho)
   # grafico boxplot: tiempo de viaje promedio
   data_tiempo <- data %>%
     mutate(horas_viaje = as.numeric(horas_viaje),

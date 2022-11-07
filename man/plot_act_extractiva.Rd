@@ -50,4 +50,5 @@ ancho <- 8
 alto <- 5
 plot_act_extractiva(datos = datos, col_especie = col_especie, especie = especie, col_caleta = col_caleta, col_especie = col_especie, orden_caletas = orden_caletas, nombre_salida_prefix = nombre_salida_prefix, ancho = ancho, alto = alto)
 }
+
 }
