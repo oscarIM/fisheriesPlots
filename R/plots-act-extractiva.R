@@ -1,5 +1,5 @@
 #' @title plot_act_extractiva
-#' @description Función para hacer el gráfico del "multipanel"
+#' @description Función para hacer el gráfico del "act_extractiva"
 #' @param datos dataframe de entrada. Formato: separado por tab. (Tiene que tener: coluna que identifique a las especies/recurso, caletas, meses, años. Los meses representan el desembarco en ese mes/año)
 #' @param col_especies columna que tiene que el nombre de las especies/recursos
 #' @param especie Vector con el nombre de la especie que se quiera incluir en el gráfico.
