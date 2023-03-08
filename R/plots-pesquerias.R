@@ -53,7 +53,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
   data <- clean_names(datos) %>%
     pivot_longer(cols = ene:dic, names_to = "Meses", values_to = "desembarque", values_drop_na = TRUE) %>%
     mutate(
-      especie = str_to_sentence(.[[col_especie]]),
+      especie = str_to_upper(.[[col_especie]]),
       Meses = str_to_upper(Meses)
     )
   if (!missing(caletas)) {
