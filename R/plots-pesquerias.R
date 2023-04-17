@@ -236,7 +236,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
-  final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, align = "hv", scale = c(1,20,1))
+  final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, align = "hv", scale = c(0.5,20,0.5))
   dev.off()
   ggsave(filename = nombre_salida, plot = final, units = "in", width = ancho, height = alto, dpi = 300)
 }
