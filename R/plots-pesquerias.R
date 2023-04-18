@@ -237,10 +237,9 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
-  #final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, align = "hv", scale = c(1,1,1))
-  final_2 <- plot_a/plot_b/plot_c + plot_layout(widths = c(1, 10,1),  heights =c(1,10,1))
-  dev.off()
-  ggsave(filename = nombre_salida, plot = final_2, units = "in", width = ancho, height = alto, dpi = 300)
+  final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, align = "hv", widths = c(1,2,1), heights = c(1,2,1))
+   dev.off()
+  ggsave(filename = nombre_salida, plot = final, units = "in", width = ancho, height = alto, dpi = 300)
 }
 #' @title plot_tipo_embarcacion
 #' @description Función para hacer el grafico del "tipo de embarcaciones"
