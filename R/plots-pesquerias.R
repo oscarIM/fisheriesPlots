@@ -238,7 +238,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
   #final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, align = "hv", scale = c(1,1,1))
-  final_2 <- plot_a/plot_b/plotc + plot_layout(widths = c(1, 10,1))
+  final_2 <- plot_a/plot_b/plot_c + plot_layout(widths = c(1, 10,1))
   dev.off()
   ggsave(filename = nombre_salida, plot = final_2, units = "in", width = ancho, height = alto, dpi = 300)
 }
