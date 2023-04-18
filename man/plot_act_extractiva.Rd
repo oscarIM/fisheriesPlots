@@ -9,7 +9,7 @@ plot_act_extractiva(
   col_especies,
   especie,
   col_caleta,
-  orden_caletas,
+  orden_caletas = NULL,
   nombre_salida_prefix,
   ancho,
   alto
@@ -36,7 +36,7 @@ plot_act_extractiva(
 imágenes png
 }
 \description{
-Función para hacer el gráfico del "multipanel"
+Función para hacer el gráfico del "act_extractiva"
 }
 \examples{
 \dontrun{
