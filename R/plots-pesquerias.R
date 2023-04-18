@@ -87,7 +87,7 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_y_continuous(n.breaks = n_ticks) +
     ggtitle(label = "Tipo Especies") +
     theme_light() +
-    theme(legend.spacing.x = unit(0.35, 'cm'),plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
+    theme(legend.spacing.x = unit(0.35, "cm"), plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
@@ -233,14 +233,15 @@ plot_multipanel <- function(datos, dicc, caletas = NULL, especies_rm = NULL, col
     scale_x_discrete(limits = pos) +
     ggtitle(label = "Tipo Especies") +
     theme_light() +
-    theme(legend.spacing.x = unit(0.35, 'cm'),plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
+    theme(legend.spacing.x = unit(0.35, "cm"), plot.title = element_text(hjust = 0.5), text = element_text(size = 11)) +
     scale_fill_manual(breaks = c("Algas", "Invertebrados", "Peces"), values = alpha(col_tipo, 0.7)) +
     theme(legend.position = "top") +
     theme(legend.title = element_blank())
-  final <- grid.arrange(grobs = list(plot_a, plot_b, plot_c), nrow = 3, align = "hv", widths = c(1,1.3,1), heights = c(1,1.3,1))
-   dev.off()
+  final <- gridExtra::grid.arrange(grobs = list(plot_a, plot_b, plot_c), ncol = 1, align = "hv", heights = c(1, 1.2, 1))
+  dev.off()
   ggsave(filename = nombre_salida, plot = final, units = "in", width = ancho, height = alto, dpi = 300)
 }
+
 #' @title plot_tipo_embarcacion
 #' @description Función para hacer el grafico del "tipo de embarcaciones"
 #' @param datos dataframe de entrada. Formato: separado por tab (Tiene que tener las columnas: caletas/caleta_inscripcion, material,tipo)
